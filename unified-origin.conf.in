@@ -1,4 +1,3 @@
-LoadModule smooth_streaming_module modules/mod_smooth_streaming.so
 AddHandler smooth-streaming.extensions .ism .isml
 
 ServerName unified-origin
@@ -12,14 +11,13 @@ UspLicenseKey /etc/usp-license.key
 
 LogFormat {{LOG_FORMAT}} log_format
 
-<VirtualHost *:80>
-  CustomLog /dev/stdout log_format
+<VirtualHost 0.0.0.0:80>
+# don't log kubernetes probes
+  SetEnvIf User-Agent "kube-probe/1\.18" dontlog
+  CustomLog /dev/stdout log_format env=!dontlog
   ErrorLog /dev/stderr
 
   LogLevel {{LOG_LEVEL}}
-
-  AddHandler smooth-streaming.extensions .ism .isml .mp4
-  SSLProxyEngine on
 
   DocumentRoot /var/www/unified-origin
 
@@ -27,7 +25,6 @@ LogFormat {{LOG_FORMAT}} log_format
   Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
   Header set Access-Control-Allow-Origin "*"
   Header set Access-Control-Expose-Headers "Server,range"
-
 </VirtualHost>
 
 <Directory /var/www/unified-origin>

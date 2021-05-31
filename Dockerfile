@@ -1,40 +1,62 @@
-FROM ubuntu:18.04
+ARG UBUNTUVERSION=focal
 
-# Install wget
-RUN apt-get update && apt-get install -y wget gnupg
+FROM ubuntu:$UBUNTUVERSION
 
-# Add repository
-RUN echo "deb [arch=amd64] https://stable.apt.unified-streaming.com bionic multiverse" > /etc/apt/sources.list.d/unified-streaming.list
+# ARGs declared before FROM are in a different scope, so need to be stated again
+# https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+ARG UBUNTUVERSION
+ARG REPO=https://stable.apt.unified-streaming.com
+ARG VERSION=1.11.1
+
+# noninteractive installs
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install wget and gnupg
+RUN apt-get update \
+&&  apt-get install -y \
+        wget \
+        gnupg \
+        unzip
+
+# Add tears of steel first for Docker build/cache purposes
+RUN wget http://repository.unified-streaming.com/tears-of-steel.zip
+
+RUN mkdir -p /var/www/unified-origin \
+&&  unzip tears-of-steel.zip -d /var/www/unified-origin
 
 # Add the Unified Streaming public key
-RUN wget https://stable.apt.unified-streaming.com/unifiedstreaming.pub && apt-key add unifiedstreaming.pub
+RUN wget $REPO/unifiedstreaming.pub \
+&&  apt-key add unifiedstreaming.pub
+
+# Add repository
+RUN echo "deb [arch=amd64] $REPO $UBUNTUVERSION multiverse" > /etc/apt/sources.list.d/unified-streaming.list
 
 # Install Origin
 RUN apt-get update \
-    && apt-get install -y \
-    python3 \
-    apache2 \
-    mp4split \
-    libapache2-mod-smooth-streaming
-
-
+&&  apt-get install -y \
+        apache2 \
+        mp4split=$VERSION \
+        libapache2-mod-smooth-streaming=$VERSION
 
 # Set up directories and log file redirection
 RUN mkdir -p /run/apache2 \
-    && ln -sf /dev/stderr /var/log/apache2/error.log \
-    && ln -sf /dev/stdout /var/log/apache2/access.log \
-    && mkdir -p /var/www/unified-origin
+&&  rm -f /var/log/apache2/error.log \
+&&  ln -s /dev/stderr /var/log/apache2/error.log \
+&&  rm -f /var/log/apache2/access.log \
+&&  ln -s /dev/stdout /var/log/apache2/access.log
 
 
-COPY httpd.conf /etc/apache2/httpd.conf
-COPY unified-origin.conf.in /etc/apache2/sites-enabled/unified-origin.conf
-# COPY transcode.conf.in /etc/apache2/sites-enabled/transcode.conf
+# Enable extra modules and disable default site
+RUN a2enmod \
+        headers \
+        proxy \
+        ssl \
+        mod_smooth_streaming \
+&& a2dissite 000-default
+
+# Copy apache config and entrypoint script
+COPY unified-origin.conf.in /etc/apache2/sites-enabled/unified-origin.conf.in
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY index.html /var/www/unified-origin/index.html
-COPY clientaccesspolicy.xml /var/www/unified-origin/clientaccesspolicy.xml
-COPY crossdomain.xml /var/www/unified-origin/crossdomain.xml
-
-
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
