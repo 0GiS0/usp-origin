@@ -43,6 +43,8 @@ wget http://repository.unified-streaming.com/tears-of-steel.zip
 #Unzip it
 unzip tears-of-steel.zip -d tears-of-steel
 
-#Upload all files on VoD to the Persistent Volume created
+#Upload all files in the Persistent Volume created
+kubectl describe pv
 
 #Get the svc IP and see if it works
+kubectl get svc origin-svc
