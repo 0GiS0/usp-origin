@@ -43,6 +43,7 @@ az aks get-credentials -g $RESOURCE_GROUP -n $AKS_NAME
 kubectl get nodes
 
 #Create a secret with the USP licence key
+#Create a filename called "key" and paste the usp licence key
 kubectl create secret generic usp-licence --from-file=key
 
 # Create the rest of the resources
