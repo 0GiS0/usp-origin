@@ -1,0 +1,76 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefileclass-premium
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=0
+  - gid=0
+  - mfsymlinks
+  - cache=strict
+  - actimeo=30
+parameters:
+  skuName: Premium_LRS
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: origin-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: azurefileclass-premium
+  resources:
+    requests:
+      storage: 1000Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: origin
+spec:
+  selector:
+    matchLabels:
+      app: origin
+  template:
+    metadata:
+      labels:
+        app: origin
+    spec:
+      containers:
+        - name: origin
+          # image: unifiedstreaming/origin:1.10.28
+          image: 0gis0/origin
+          imagePullPolicy: Always
+          env:
+            - name: USP_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: key
+                  name: usp-licence
+          volumeMounts:
+            - mountPath: /var/www/unified-origin
+              name: assets
+          ports:
+            - containerPort: 80
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: origin-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: origin-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: origin
+  ports:
+    - port: 80
+      targetPort: 80
