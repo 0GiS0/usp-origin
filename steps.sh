@@ -17,7 +17,6 @@ docker run -p 80:80 \
 # Now lets create an AKS
 RESOURCE_GROUP="unified-streaming-platform"
 LOCATION="northeurope"
-STORAGE_NAME="uspassets" #You should change this name for an unique name
 AKS_NAME="UnifiedStreaming"
 
 #Log in Azure
@@ -25,16 +24,6 @@ az login
 
 #Create resource group
 az group create --name $RESOURCE_GROUP --location $LOCATION
-
-#Create a storage account
-az storage account create --name $STORAGE_NAME --resource-group $RESOURCE_GROUP --location $LOCATION --sku Standard_LRS
-
-#Azure an azure file share
-SHARE_NAME="tears-of-steel"
-STORAGE_KEY=$(az storage account keys list -g $RESOURCE_GROUP -n $STORAGE_NAME --query '[0].value' -o tsv)
-
-#Create a File Share
-az storage share create --account-name $STORAGE_NAME --name $SHARE_NAME
 
 #Azure Kubernetes Service
 az aks create -g $RESOURCE_GROUP -n $AKS_NAME --node-count 1 --generate-ssh-keys
