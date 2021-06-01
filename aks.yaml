@@ -33,6 +33,7 @@ kind: Deployment
 metadata:
   name: origin
 spec:
+  replicas: 3
   selector:
     matchLabels:
       app: origin
