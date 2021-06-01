@@ -1,5 +1,5 @@
 # Build the image
-docker build -t 0gis0/origin .
+docker build --no-cache -t 0gis0/origin .
 
 # Push the image to Docker Hub
 docker push 0gis0/origin

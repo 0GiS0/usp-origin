@@ -1,7 +1,7 @@
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: azurefileclass-premium
+  name: azurefileclass
 provisioner: kubernetes.io/azure-file
 mountOptions:
   - dir_mode=0777
@@ -12,7 +12,7 @@ mountOptions:
   - cache=strict
   - actimeo=30
 parameters:
-  skuName: Premium_LRS
+  skuName: Standard_LRS
 
 ---
 apiVersion: v1
@@ -22,7 +22,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: azurefileclass-premium
+  storageClassName: azurefileclass
   resources:
     requests:
       storage: 1000Gi
@@ -53,8 +53,9 @@ spec:
                   key: key
                   name: usp-licence
           volumeMounts:
-            - mountPath: /var/www/unified-origin
-              name: assets
+            - name: assets
+              mountPath: /var/www/unified-origin
+              
           ports:
             - containerPort: 80
       volumes:

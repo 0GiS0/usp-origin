@@ -2,7 +2,7 @@ AddHandler smooth-streaming.extensions .ism .isml
 
 ServerName unified-origin
 
-<Location />
+<Location />  
   UspHandleIsm on
   UspEnableSubreq on
 </Location>
@@ -27,6 +27,7 @@ LogFormat {{LOG_FORMAT}} log_format
   Header set Access-Control-Expose-Headers "Server,range"
 </VirtualHost>
 
-<Directory /var/www/unified-origin>
+<Directory /var/www/unified-origin> 
+  UspEnableMMAP Off
   Require all granted
 </Directory>
